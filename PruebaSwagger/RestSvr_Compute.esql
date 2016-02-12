@@ -1,0 +1,37 @@
+
+
+CREATE COMPUTE MODULE RestSvr_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		 CALL CopyMessageHeaders();
+		-- CALL CopyEntireMessage();
+		set OutputRoot.HTTPReplyHeader.{'Access-Control-Allow-Origin'} = '*'; 
+		
+		CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON';
+		set OutputRoot.JSON.Data.apiVersion       = '1.0.0';
+		set OutputRoot.JSON.Data.swaggerVersion   = '1.2';
+		
+		CREATE FIELD OutputRoot.JSON.Data.apis IDENTITY (JSON.Array)apis;
+		set OutputRoot.JSON.Data.apis.Item[1].path 		  = 'nacho';
+		set OutputRoot.JSON.Data.apis.Item[1].description = 'mi servicio rest atomico';
+
+--CREATE FIELD outBodyRef.others IDENTITY (JSON.Array)others;
+--SET outBodyRef.others.Item[2].dataName = 'empresa';
+		
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyMessageHeaders() BEGIN
+		DECLARE I INTEGER 1;
+		DECLARE J INTEGER;
+		SET J = CARDINALITY(InputRoot.*[]);
+		WHILE I < J DO
+			SET OutputRoot.*[I] = InputRoot.*[I];
+			SET I = I + 1;
+		END WHILE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot = InputRoot;
+	END;
+END MODULE;
